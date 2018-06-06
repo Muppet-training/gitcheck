@@ -4,9 +4,11 @@ import Form from "./components/Form";
 import MyClass from "./components/MyClass";
 import MyComp from "./components/MyComp";
 import ListRecipes from "./components/ListRecipes";
+import EditRecipeForm from "./components/EditRecipeForm";
 
 export interface State {
   recipes: Recipe[];
+  editRecipe?: any | null;
 }
 
 export interface Recipe {
@@ -21,29 +23,14 @@ class App extends React.Component<any, State> {
   constructor(props: any) {
     super(props);
     this.state = {
-      recipes: [
-        {
-          internal: false,
-          _id: "5b0d610a50ec2d0a6087d901",
-          price: 23,
-          name: "Cakes",
-          __v: 0
-        },
-        {
-          internal: true,
-          _id: "5b11434175ecff12789bb24a",
-          name: "Carl's Green Goo",
-          price: 14,
-          __v: 0
-        },
-        {
-          internal: false,
-          _id: "5b11454ccc6511270c8486c3",
-          name: "Carl's Cake",
-          price: 95,
-          __v: 0
-        }
-      ]
+      recipes: [],
+      editRecipe: {
+        _id: "",
+        internal: false,
+        name: "",
+        price: 0,
+        __v: 0
+      }
     };
     this.handleGetAllRecipes = this.handleGetAllRecipes.bind(this);
   }
@@ -55,33 +42,45 @@ class App extends React.Component<any, State> {
         return data.json();
       })
       .then(json => {
-        // this.setState({
-        //   recipes: json
-        // });
-        this.setState((prevState, props) => ({
-          ...prevState.recipes,
+        this.setState({
           recipes: json
-        }));
+        });
       });
   }
 
   public render() {
+    // if (this.state.editRecipe._id !== "") {
+    //   console.log("editRecipe", this.state.editRecipe);
+    // }
+    console.log("after editRecipe", this.state.editRecipe);
     return (
       <AppWrap>
-        <MyClass isTrue={true} />
+        <MyClass />
         <MyComp
           name="My Clickable"
           handlePassedOnClick={this.handlePassedOnClick}
         />
         <hr />
-        <Form text="My Form" handleAddNewRecipe={this.handleAddNewRecipe} />
+        <Form handleAddNewRecipe={this.handleAddNewRecipe} />
         <hr />
         <ListRecipes
           recipes={this.state.recipes}
           handleDelete={this.handleDelete}
+          handleLoadEditFormOnClick={this.handleLoadEditFormOnClick}
         />
-        <br />
-        {/* <button onClick={this.handleGetAllRecipes}> + More Recipes</button> */}
+        <hr />
+        {this.state.editRecipe._id !== "" ? (
+          <div>
+            <div>Edit Recipe</div>
+            <EditRecipeForm
+              editRecipe={this.state.editRecipe}
+              handleEditRecipeChange={this.handleEditRecipeChange}
+              handleEditRecipe={this.handleEditRecipe}
+            />
+          </div>
+        ) : (
+          <div>Click Recipe To Edit It</div>
+        )}
       </AppWrap>
     );
   }
@@ -90,6 +89,58 @@ class App extends React.Component<any, State> {
     alert("You passed a function using typescript!");
   }
 
+  handleLoadEditFormOnClick = (recipeId: string) => {
+    const editRecipe = this.state.recipes.filter(
+      recipe => recipe._id === recipeId
+    );
+    console.log("selected editRecipe", editRecipe[0]);
+    this.setState({ editRecipe: editRecipe[0] });
+  };
+
+  handleEditRecipeChange = (name: string, value: any) => {
+    console.log("Passed Edit value", this.state);
+    let inputValue = value;
+    if (name === "internal") {
+      this.state.editRecipe.internal === false
+        ? (inputValue = true)
+        : (inputValue = false);
+    }
+    this.setState((prevState, props) => ({
+      editRecipe: {
+        ...prevState.editRecipe,
+        [name]: inputValue
+      }
+    }));
+  };
+
+  handleEditRecipe = (e: any) => {
+    e.preventDefault();
+    const editRecipe = this.state.editRecipe;
+
+    return fetch("/api/recipes/" + editRecipe._id, {
+      method: "put",
+      body: JSON.stringify(editRecipe),
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json"
+      }
+    })
+      .then(this.checkStatus)
+      .then(() => this.clearEditRecipe())
+      .then(() => this.handleGetAllRecipes());
+  };
+
+  clearEditRecipe = () => {
+    const refreshRecipe = {
+      _id: "",
+      internal: false,
+      name: "",
+      price: 0,
+      __v: 0
+    };
+    this.setState({ editRecipe: refreshRecipe });
+  };
+
   handleGetAllRecipes = () => {
     fetch("/api/recipes")
       .then(data => {
@@ -97,13 +148,9 @@ class App extends React.Component<any, State> {
         return data.json();
       })
       .then(json => {
-        // this.setState({
-        //   recipes: json
-        // });
-        this.setState((prevState, props) => ({
-          ...prevState.recipes,
+        this.setState({
           recipes: json
-        }));
+        });
       });
   };
 
@@ -125,31 +172,23 @@ class App extends React.Component<any, State> {
   };
 
   checkStatus = (Response: any) => {
-    console.log(Response);
-
     if (Response.status >= 200 && Response.status < 300) {
       return Response;
     } else {
       const error = new Error(Response.statusText);
-      console.log("hI Ya error", error);
-      // error.response = Response;
       throw error;
     }
   };
 
-  handleDelete = (id: number) => {
-    console.log("You Clicked", id);
+  handleDelete = (id: string) => {
+    // console.log("You Clicked", id);
     fetch("/api/recipes/" + id, {
       method: "delete",
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json"
       }
-    })
-      // .then(this.checkStatus)
-      .then(() => console.log("updated!!!"))
-      // .then(this.handleCheckEditDeleteId(id))
-      .then(() => this.handleGetAllRecipes());
+    }).then(() => this.handleGetAllRecipes());
   };
 }
 

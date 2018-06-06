@@ -1,20 +1,20 @@
 import * as React from "react";
 
 interface Props {
-  age?: number;
-  text: string;
   handleAddNewRecipe: (newRecipe: any) => void;
 }
 
 interface State {
   price: number;
   name: string;
+  internal: boolean;
 }
 
 export default class Form extends React.Component<Props, State> {
   state: State = {
     price: 0,
-    name: ""
+    name: "",
+    internal: false
   };
 
   handleChange = (e: React.FormEvent<HTMLInputElement>) => {
@@ -24,24 +24,38 @@ export default class Form extends React.Component<Props, State> {
     } as any);
   };
 
+  handleCheckboxChange = () => {
+    const prevState = this.state;
+    let checked = false;
+    prevState.internal === false ? (checked = true) : (checked = false);
+    this.setState({ internal: checked });
+  };
+
   handleOnSubmit = (e: any) => {
     e.preventDefault();
     const newRecipe = this.state;
     console.log("Form Submitted", newRecipe);
     this.props.handleAddNewRecipe(newRecipe);
+    this.setState({
+      name: "",
+      price: 0,
+      internal: false
+    });
   };
 
   public render() {
-    const { text } = this.props;
-    const { name, price } = this.state;
+    const { name, price, internal } = this.state;
     return (
       <div>
-        <div>{text}</div>
+        <div>+ Add Recipe</div>
+        <br />
         <form onSubmit={this.handleOnSubmit}>
           <label>
             Name
             <input name="name" value={name} onChange={this.handleChange} />
           </label>
+          <br />
+          <br />
           <label>
             Price
             <input
@@ -50,6 +64,19 @@ export default class Form extends React.Component<Props, State> {
               onChange={this.handleChange}
             />
           </label>
+          <br />
+          <br />
+          <label>
+            Interval
+            <input
+              name="interval"
+              type="checkbox"
+              defaultChecked={internal}
+              onChange={this.handleCheckboxChange}
+            />
+          </label>
+          <br />
+          <br />
           <button type="submit"> Submit </button>
         </form>
       </div>

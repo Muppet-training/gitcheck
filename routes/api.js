@@ -20,11 +20,11 @@ router.post("/recipes", (req, res, next) => {
 
 // Update recipe from the database
 router.put("/recipes/:id", (req, res, next) => {
-  Recipe.create(req.body)
-    .then(recipe => {
+  Recipe.findByIdAndUpdate({ _id: req.params.id }, req.body).then(recipe => {
+    Recipe.findOne({ _id: req.params.id }).then(recipe => {
       res.send(recipe);
-    })
-    .catch(next);
+    });
+  });
 });
 
 // Delete recipe from the database

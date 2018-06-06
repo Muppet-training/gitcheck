@@ -2,7 +2,6 @@ import * as React from "react";
 
 export interface MyClassProps {
   name?: string;
-  isTrue: boolean;
 }
 export interface MyClassState {
   age: number;

@@ -30,7 +30,8 @@ export interface Props {
   // name: string;
   // price: number;
   recipes: Recipe[];
-  handleDelete: (id: number) => any;
+  handleDelete: (id: string) => any;
+  handleLoadEditFormOnClick: (id: string) => any;
 }
 
 class ListRecipes extends React.Component<Props> {
@@ -39,7 +40,14 @@ class ListRecipes extends React.Component<Props> {
     const recipes = this.props.recipes.map((recipe: any, index: number) => {
       return (
         <ListLi key={index}>
-          <ListItem>{recipe.name}</ListItem>
+          <ListItem
+            onClick={this.props.handleLoadEditFormOnClick.bind(
+              this,
+              recipe._id
+            )}
+          >
+            {recipe.name}
+          </ListItem>
           <ListItem>{recipe.price}</ListItem>
           <ListItem>{recipe.internal ? "True" : "False"}</ListItem>
           <ListItem>
